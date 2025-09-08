@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = not PRODUCTION
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "justin-timothy-footballproject.pbp.cs.ui.ac.id/"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "justin-timothy-footballproject.pbp.cs.ui.ac.id"]
 #test
 ###
 # Application definition
