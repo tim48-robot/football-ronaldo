@@ -20,7 +20,7 @@ class Product(models.Model):
 
 
     def __str__(self):
-        return self.title
+        return self.name
     
     @property
     def is_featured_bool(self):

@@ -1,0 +1,19 @@
+# Link Menuju PWS
+https://justin-timothy-footballproject.pbp.cs.ui.ac.id/
+
+## Jawaban atas Pertanyaan
+- Cara saya mengimplementasikan step by step,
+pertama-tama setting virtual env dulu untuk isolasi dependencies dan mencegah tabrakan versi dan dependensi dengan projek lain. lalu siapkan dependiences yg ingin didownload dan masuk ke venv lalu download. mulai projek dengan startproject. di dalam project ada wsgi,asgi,urls, settings. urls untuk routing level proyek dan settings untuk mengatur banyak hal; mostly saat run server di deployment/production. lalu kita buat aplikasi (main) kalau disimplifikasi mungkin semacam fitur sebutannya, jangan lupa untuk mengaitkan app main di installed_apps di projek. lalu kita rutekan pada urls.py di level proyek untuk  path '' menuju main.urls. Next, di folder main kita rubah file models.py untuk membuat class/ model baru bernama Product. ada category-choices berupa tuple untuk menandakan kategori pilihan. lalu membuat beberapa method untuk return name dan melakukan beberapa perhitungan, buat variable dengan tipe fieldnya, misal name = model.CharField() yang bisa kita passing beberapa argumen. di views.py kita import fungsi render untuk mereturn main.html (yang bisa mengakses variabel dari context berupa dictionary key value di fungsi show_main yg kita buat).
+
+urls.py mengimpor fungsi dari views.py untuk nantinya di eksekusi ketika pengguna menuju path yg didefinisikan di urls.py. lalu add commit dan deploy ke PWS. (Btw saya sempat beberapa kali error, karena SECRET_KEY ku berada di line sebelum production, sehingga SECRET_KEY grebnya dari .env bukan .env.prod)
+
+-![FotoBagan](images/bagankeseluruhan.png). 
+Jadi pertama tama user akan request ke internet, internet akan request ke webserver kita dengan django sebagai backendnya. Lalu akan minta ke urls.py, setelah itu di urls.py, akan dikategorikan berdasarkan urls yang dituju, fungsi manakah dari views.py yang dieksekusi, fungsi show_main misalnya. views ini menjadi business logic layer, menjembatani models dan template, semisal lebih dari sekedar eksekusi html, maka bisa saja mengirim data menuju database atau sesimpel crud operations. anyways dari view bisa read/write data dari models. Jadi, views bisa read/write data tapi yang paling simpelnya itu menerima request http lalu merender main.html, main.html juga bisa mengakses dictionary di views, jadi kalau views greb data dari models lalu dikirm ke diproses dengan forloop di .html lalu dikirim ke user itu sangat memungkinkan.
+
+- Peran settings.py dalam proyek Django itu sangat vital, dimulai dari keamanan, middleware, sampai menjaga env dengan menggunakan dotenv. secara keseluruhan settings itu untuk mengatur jalannya projek django dari keamananan, deployment, production yang meliputi database, timezone, app and extension allowed di app tersebut
+
+- Cara kerja migrasi database di Django adalah: makemigrations untuk membuat berkas migrasi yang berisi perubahan model yang belum ada di basis data, sedangkan migrate adalah untuk mengaplikasikan perubahan yg tercantum di berkas migrasi ke dalam basis data lokal. tanpa dua proses ini maka tidak akan terupdate di database nya.
+
+- Framework django dijadikan permulaan pembelajaran pengembangan perangkat lunak karena sangat mudah dipahami dan easy to read. Secara garis besar jelas sekali yaitu MVT, model view template. Per bagian juga jelas ada urlsnya untuk routing, views untuk menghubungkan model dan template kalau di filenya menghubungkan dengan menerima http respons dan send html. Language menggunakan python, easy dibanding c++. Banyak dokumentasi dan built in yang sudah enak tinggal startapp, startproject.
+
+-Sementara ini belum ada feedback karena asisten dosennya cukup fast respon di grup. Saya sendiri belum bisa menilai banyak karena untuk tutorial cenderung straight forward. Tetapi untuk salah satu asisten dosen yang mengajar di tutorial 0 sangat kompeten menurut saya.
