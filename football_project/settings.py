@@ -25,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # seinget saya di tutorial ini ga disuruh untuk masukin ke env, but since django memberikan security warning, kutaruh di env.
-SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
+SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "justin-timothy-footballproject.pbp.cs.ui.ac.id"]
