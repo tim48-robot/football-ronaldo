@@ -33,7 +33,7 @@ DEBUG = not PRODUCTION
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "justin-timothy-footballproject.pbp.cs.ui.ac.id/"]
 #test
-#
+###
 # Application definition
 
 INSTALLED_APPS = [
