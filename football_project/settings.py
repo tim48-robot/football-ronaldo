@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # seinget saya di tutorial ini ga disuruh untuk masukin ke env, but since django memberikan security warning, kutaruh di env.
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run with debug turned on in production! ##comment for commit
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = not PRODUCTION
 
