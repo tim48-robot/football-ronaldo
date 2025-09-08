@@ -25,15 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # seinget saya di tutorial ini ga disuruh untuk masukin ke env, but since django memberikan security warning, kutaruh di env.
-SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production! ##comment for commit
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
-DEBUG = not PRODUCTION
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
-
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "justin-timothy-footballproject.pbp.cs.ui.ac.id"]
+#test
+###
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'main'
 ]
 
 MIDDLEWARE = [
@@ -135,7 +136,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static files (CSS, JavaScript, Images) ## 
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
