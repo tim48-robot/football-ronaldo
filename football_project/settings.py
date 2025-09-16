@@ -47,7 +47,7 @@ INSTALLED_APPS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://justin-timothy-footballproject.pbp.cs.ui.ac.id/"
+    "https://justin-timothy-footballproject.pbp.cs.ui.ac.id"
 ]
 
 MIDDLEWARE = [
