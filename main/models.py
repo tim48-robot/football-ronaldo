@@ -27,7 +27,7 @@ class Product(models.Model):
     @property
     def is_featured_bool(self):
         return self.views > 20
-        
+         ##
     def increment_views(self):
         self.views += 1
         self.save()
