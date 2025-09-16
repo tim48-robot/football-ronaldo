@@ -22,7 +22,7 @@
 
   <p><b>{{ product.get_category_display }}</b>{% if product.is_featured %} | 
     <b>Featured</b>{% endif %}{% if product.is_featured_bool %} | 
-    <b>Hot</b>{% endif %} | <i>{{ product.price }}</i> 
+    <b>Hot</b>{% endif %} | <span>Harga: {{ product.price }}</span> 
     | Views: {{ product.views }}</p>
 
   {% if product.thumbnail %}
