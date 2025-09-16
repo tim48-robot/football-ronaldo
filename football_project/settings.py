@@ -46,6 +46,10 @@ INSTALLED_APPS = [
     'main'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://justin-timothy-footballproject.pbp.cs.ui.ac.id/"
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
