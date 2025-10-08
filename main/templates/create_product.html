@@ -1,55 +1,239 @@
 {% extends 'base.html' %}
-{% block meta %}
-<title>Create Product - Football Product</title>
-{% endblock meta %}
+{% load static %}
 
 {% block content %}
-<div class="bg-gray-50 w-full min-h-screen">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
-    <!-- Back Navigation -->
-    <div class="mb-6">
-      <a href="{% url 'main:show_main' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-        ← Back to Product
-      </a>
-    </div>
-    
-    <!-- Form -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 form-style">
-      <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Create New Product</h1>
-        <p class="text-gray-600">Create a new product to let buyers get a hang of it </p>
+<div class="container my-5">
+  <h2 class="text-center mb-4">Product List</h2>
+
+  <div id="toast" class="hidden fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow"></div>
+
+  <div id="loading" class="text-center">Loading...</div>
+  <div id="error" class="hidden text-center text-red-600">Failed to load products.</div>
+  <div id="empty" class="hidden text-center text-gray-500">No products found.</div>
+
+  <div class="text-center mb-3">
+    <button id="createBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Create Product</button>
+    <button id="refreshBtn" class="bg-gray-500 text-white px-4 py-2 rounded">Refresh</button>
+  </div>
+
+  <div id="productList" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+</div>
+
+<div id="productModal" class="hidden fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+  <div class="bg-white p-6 rounded w-96 shadow-lg">
+    <h3 id="modalTitle" class="text-lg font-bold mb-3">Create Product</h3>
+    <form id="productForm" class="space-y-3">
+      {% csrf_token %}
+      <input type="hidden" id="productId" />
+      <input type="text" id="name" name="name" placeholder="Product Name" class="border p-2 w-full mb-2" required>
+      <input type="number" id="price" name="price" placeholder="Price" class="border p-2 w-full mb-2" required>
+      <textarea id="description" name="description" placeholder="Description" class="border p-2 w-full mb-2"></textarea>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="cancelModal" class="bg-gray-300 px-3 py-1 rounded">Cancel</button>
+        <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Save</button>
       </div>
-      
-      <form method="POST" class="space-y-6">
-        {% csrf_token %}
-        {% for field in form %}
-          <div>
-            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-              {{ field.label }}
-            </label>
-            <div class="w-full">
-              {{ field }}
-            </div>
-            {% if field.help_text %}
-              <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
-            {% endif %}
-            {% for error in field.errors %}
-              <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-            {% endfor %}
-          </div>
-        {% endfor %}
-        
-        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-          <a href="{% url 'main:show_main' %}" class="order-2 sm:order-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors text-center">
-            Cancel
-          </a>
-          <button type="submit" class="order-1 sm:order-2 flex-1 bg-green-600 text-white px-6 py-3 rounded-md font-medium hover:bg-green-700 transition-colors">
-            Publish Product
-          </button>
-        </div>
-      </form>
-    </div>
+    </form>
   </div>
 </div>
-{% endblock %}
+
+<script>
+  const listUrl = "{% url 'main:show_json' %}";
+  const detailUrlTemplate = "{% url 'main:show_json_by_id' 0 %}";
+  const createUrl = "{% url 'main:create_product' %}";
+  const editUrlTemplate = "{% url 'main:edit_product' 0 %}";
+  const deleteUrlTemplate = "{% url 'main:delete_product' 0 %}";
+
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const productList = document.getElementById('productList');
+  const loading = document.getElementById('loading');
+  const empty = document.getElementById('empty');
+  const error = document.getElementById('error');
+  const toast = document.getElementById('toast');
+
+  const modal = document.getElementById('productModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const form = document.getElementById('productForm');
+  const nameInput = document.getElementById('name');
+  const priceInput = document.getElementById('price');
+  const descInput = document.getElementById('description');
+  const productIdInput = document.getElementById('productId');
+
+  function showToast(message, success = true) {
+    toast.textContent = message;
+    toast.className = `fixed top-4 right-4 px-4 py-2 rounded shadow text-white ${success ? 'bg-green-600' : 'bg-red-600'}`;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  function toggleModal(show, isEdit = false, product = null) {
+    modal.classList.toggle('hidden', !show);
+    if (show) {
+      if (isEdit && product) {
+        modalTitle.textContent = "Edit Product";
+        productIdInput.value = product.pk || product.id || "";
+        nameInput.value = product.fields ? product.fields.name : (product.name || "");
+        priceInput.value = product.fields ? product.fields.price : (product.price || "");
+        descInput.value = product.fields ? (product.fields.description || "") : (product.description || "");
+      } else {
+        modalTitle.textContent = "Create Product";
+        form.reset();
+        productIdInput.value = "";
+      }
+    }
+  }
+
+  async function loadProducts() {
+    loading.classList.remove('hidden');
+    error.classList.add('hidden');
+    empty.classList.add('hidden');
+    productList.innerHTML = '';
+
+    try {
+      const res = await fetch(listUrl);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+
+      loading.classList.add('hidden');
+      if (!Array.isArray(data) || data.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      data.forEach(p => {
+        const card = document.createElement('div');
+        card.className = "border p-4 rounded shadow-sm bg-white";
+        const title = document.createElement('h4');
+        title.className = "font-bold";
+        title.textContent = p.fields.name || '';
+
+        const priceEl = document.createElement('p');
+        priceEl.textContent = `Price: ${p.fields.price || ''}`;
+
+        const descEl = document.createElement('p');
+        descEl.textContent = p.fields.description || '';
+
+        const actions = document.createElement('div');
+        actions.className = "mt-2 flex gap-2";
+
+        const editBtn = document.createElement('button');
+        editBtn.className = "btn-edit bg-yellow-500 text-white px-2 py-1 rounded";
+        editBtn.type = "button";
+        editBtn.dataset.id = p.pk;
+
+        editBtn.textContent = "Edit";
+
+        const delBtn = document.createElement('button');
+        delBtn.className = "btn-delete bg-red-600 text-white px-2 py-1 rounded";
+        delBtn.type = "button";
+        delBtn.dataset.id = p.pk;
+        delBtn.textContent = "Delete";
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        card.appendChild(title);
+        card.appendChild(priceEl);
+        card.appendChild(descEl);
+        card.appendChild(actions);
+
+        productList.appendChild(card);
+      });
+
+    } catch (err) {
+      loading.classList.add('hidden');
+      error.classList.remove('hidden');
+      console.error(err);
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = productIdInput.value;
+    const url = id ? editUrlTemplate.replace('0', id) : createUrl;
+    const formData = new FormData();
+    formData.append('name', nameInput.value);
+    formData.append('price', priceInput.value);
+    formData.append('description', descInput.value);
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        toggleModal(false);
+        showToast(id ? 'Product updated!' : 'Product created!');
+        await loadProducts();
+      } else {
+        showToast('Failed to save product', false);
+      }
+    } catch (err) {
+      showToast('Failed to save product', false);
+      console.error(err);
+    }
+  });
+
+  async function deleteProductRequest(id) {
+    const url = deleteUrlTemplate.replace('0', id);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Product deleted!');
+        await loadProducts();
+      } else {
+        showToast('Failed to delete product', false);
+      }
+    } catch (err) {
+      showToast('Failed to delete product', false);
+      console.error(err);
+    }
+  }
+
+  async function openEditModalById(id) {
+    const url = detailUrlTemplate.replace('0', id);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      // data is an array produced by serializers.serialize; pick first element if present
+      let product = null;
+      if (Array.isArray(data) && data.length > 0) {
+        product = data[0];
+      } else if (data.product) {
+        product = { pk: data.product.id, fields: data.product };
+      } else {
+        // fallback: call list and find
+        const listRes = await fetch(listUrl);
+        const listData = await listRes.json();
+        product = listData.find(x => String(x.pk) === String(id));
+      }
+      toggleModal(true, true, product);
+    } catch (err) {
+      showToast('Failed to load product data', false);
+      console.error(err);
+    }
+  }
+
+  productList.addEventListener('click', function(e) {
+    const target = e.target;
+    if (target.classList.contains('btn-edit')) {
+      const id = target.dataset.id;
+      openEditModalById(id);
+      return;
+    }
+    if (target.classList.contains('btn-delete')) {
+      const id = target.dataset.id;
+      if (!confirm('Delete this product?')) return;
+      deleteProductRequest(id);
+      return;
+    }
+  });
+
+  document.getElementById('createBtn').addEventListener('click', () => toggleModal(true));
+  document.getElementB

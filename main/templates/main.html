@@ -2,56 +2,532 @@
 {% load static %}
 
 {% block meta %}
-<title>Football Product</title>
+<title>Product List - Football Product</title>
 {% endblock meta %}
 
 {% block content %}
-{% include 'navbar.html' %}
-<div class="bg-gray-50 w-full pt-16 min-h-screen">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="min-h-screen bg-gray-50">
+  <!-- Navbar -->
+  <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold text-green-600">⚽ Football Product</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-600">Welcome, <strong>{{ name }}</strong></span>
+          <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
 
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
     <!-- Header Section -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Latest Football Product</h1>
-      <p class="text-gray-600">Stay updated with the latest football stories and analysis</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Football Products</h2>
+      <p class="text-gray-600">Manage your football product collection</p>
     </div>
 
-    <!-- Filter Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 bg-white rounded-lg border border-gray-200 p-4">
-      <div class="flex space-x-3 mb-4 sm:mb-0">
-        <a href="?" class="{% if request.GET.filter == 'all' or not request.GET.filter  %} bg-green-600 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors hover:bg-green-600 hover:text-white">
-          All Product
-        </a>
-        <a href="?filter=my" class="{% if request.GET.filter == 'my' %} bg-green-600 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors hover:bg-green-600 hover:text-white">
-          My Product
-        </a>
-      </div>
-      {% if user.is_authenticated %}
-        <div class="text-sm text-gray-500">
-          Last login: {{ last_login }}
-        </div>
-      {% endif %}
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-3 mb-6">
+      <button id="createBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors inline-flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Create Product
+      </button>
+      <button id="refreshBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors inline-flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Refresh
+      </button>
     </div>
 
-    <!-- Product Grid -->
-    {% if not product_list %}
-      <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <div class="w-32 h-32 mx-auto mb-4">
-          <img src="{% static 'image/no-product.png' %}" alt="No product available" class="w-full h-full object-contain">
-        </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No product found</h3>
-        <p class="text-gray-500 mb-6">Be the first to create a new football product and get a buyer!</p>
-        <a href="{% url 'main:create_product' %}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-          Create Product
-        </a>
-      </div>
-    {% else %}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for product in product_list %}
-          {% include 'card_product.html' with product=product %}
-        {% endfor %}
-      </div>
-    {% endif %}
+    <!-- Loading State -->
+    <div id="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <p class="mt-4 text-gray-600">Loading products...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="hidden text-center py-12">
+      <svg class="w-16 h-16 mx-auto text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <p class="text-red-600 font-medium">Failed to load products</p>
+      <button onclick="loadProducts()" class="mt-4 text-green-600 hover:text-green-700 font-medium">Try Again</button>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty" class="hidden text-center py-12">
+      <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+      </svg>
+      <p class="text-gray-600 font-medium mb-2">No products yet</p>
+      <p class="text-gray-500 text-sm">Create your first product to get started</p>
+    </div>
+
+    <!-- Product List -->
+    <div id="productList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </div>
 </div>
-{% endblock content %}
+
+<!-- Create/Edit Product Modal -->
+<div id="productModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 mb-6">Create Product</h3>
+      
+      <form id="productForm" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" id="productId" />
+        
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            placeholder="Enter product name" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            required>
+        </div>
+        
+        <div>
+          <label for="price" class="block text-sm font-medium text-gray-700 mb-2">Price *</label>
+          <input 
+            type="number" 
+            id="price" 
+            name="price" 
+            placeholder="Enter price" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            required>
+        </div>
+        
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            rows="4"
+            placeholder="Enter product description" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+            required></textarea>
+        </div>
+
+        <div>
+          <label for="thumbnail" class="block text-sm font-medium text-gray-700 mb-2">Thumbnail URL</label>
+          <input 
+            type="url" 
+            id="thumbnail" 
+            name="thumbnail" 
+            placeholder="https://example.com/image.jpg" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        </div>
+
+        <div>
+          <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+          <select 
+            id="category" 
+            name="category" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <option value="jerseys">Football Jerseys</option>
+            <option value="equipment">Football Equipment and Accessories</option>
+            <option value="balls">Footballs</option>
+            <option value="goalkeeper">Goalkeeper Gear</option>
+            <option value="casual">Casual Wear and Merchandise</option>
+          </select>
+        </div>
+
+        <div class="flex items-center">
+          <input 
+            type="checkbox" 
+            id="is_featured" 
+            name="is_featured" 
+            class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+          <label for="is_featured" class="ml-2 text-sm font-medium text-gray-700">Featured Product</label>
+        </div>
+        
+        <div class="flex gap-3 pt-4">
+          <button 
+            type="button" 
+            id="cancelModal" 
+            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors">
+            Save Product
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-gray-900">Delete Product</h3>
+        <p class="text-sm text-gray-600">This action cannot be undone</p>
+      </div>
+    </div>
+    
+    <p class="text-gray-700 mb-6">Are you sure you want to delete this product? All data will be permanently removed.</p>
+    
+    <div class="flex gap-3">
+      <button 
+        id="cancelDelete" 
+        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+        Cancel
+      </button>
+      <button 
+        id="confirmDelete" 
+        class="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="hidden fixed top-4 right-4 z-50 max-w-sm">
+  <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 flex items-start gap-3">
+    <div id="toastIcon" class="flex-shrink-0"></div>
+    <div class="flex-1">
+      <p id="toastMessage" class="text-gray-800 font-medium"></p>
+    </div>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  
+  // DOM Elements
+  const productList = document.getElementById('productList');
+  const loading = document.getElementById('loading');
+  const empty = document.getElementById('empty');
+  const error = document.getElementById('error');
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toastMessage');
+  const toastIcon = document.getElementById('toastIcon');
+  
+  // Modals
+  const productModal = document.getElementById('productModal');
+  const deleteModal = document.getElementById('deleteModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const productForm = document.getElementById('productForm');
+  
+  // Form inputs
+  const productIdInput = document.getElementById('productId');
+  const nameInput = document.getElementById('name');
+  const priceInput = document.getElementById('price');
+  const descInput = document.getElementById('description');
+  const thumbnailInput = document.getElementById('thumbnail');
+  const categoryInput = document.getElementById('category');
+  const isFeaturedInput = document.getElementById('is_featured');
+  
+  // Delete modal state
+  let productToDelete = null;
+
+  // Toast functions
+  function showToast(message, type = 'success') {
+    const iconHTML = type === 'success' 
+      ? '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+      : '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    
+    toastIcon.innerHTML = iconHTML;
+    toastMessage.textContent = message;
+    toast.querySelector('.bg-white').style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+    toast.classList.remove('hidden');
+    
+    setTimeout(() => hideToast(), 4000);
+  }
+
+  function hideToast() {
+    toast.classList.add('hidden');
+  }
+
+  // Modal functions
+  function openProductModal(isEdit = false, product = null) {
+    productModal.classList.remove('hidden');
+    
+    if (isEdit && product) {
+      modalTitle.textContent = "Edit Product";
+      productIdInput.value = product.pk || product.id;
+      nameInput.value = product.fields?.name || product.name;
+      priceInput.value = product.fields?.price || product.price;
+      descInput.value = product.fields?.description || product.description || '';
+      thumbnailInput.value = product.fields?.thumbnail || product.thumbnail || '';
+      categoryInput.value = product.fields?.category || product.category || 'jerseys';
+      isFeaturedInput.checked = product.fields?.is_featured || product.is_featured || false;
+    } else {
+      modalTitle.textContent = "Create Product";
+      productForm.reset();
+      productIdInput.value = "";
+    }
+  }
+
+  function closeProductModal() {
+    productModal.classList.add('hidden');
+  }
+
+  function openDeleteModal(productId) {
+    productToDelete = productId;
+    deleteModal.classList.remove('hidden');
+  }
+
+  function closeDeleteModal() {
+    deleteModal.classList.add('hidden');
+    productToDelete = null;
+  }
+
+  // Load products
+  async function loadProducts() {
+    loading.classList.remove('hidden');
+    error.classList.add('hidden');
+    empty.classList.add('hidden');
+    productList.innerHTML = '';
+
+    try {
+      const res = await fetch("{% url 'main:show_json' %}");
+      if (!res.ok) throw new Error('Failed to fetch');
+      
+      const data = await res.json();
+      loading.classList.add('hidden');
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      data.forEach(p => {
+        const card = createProductCard(p);
+        productList.appendChild(card);
+      });
+
+    } catch (err) {
+      loading.classList.add('hidden');
+      error.classList.remove('hidden');
+      console.error(err);
+    }
+  }
+
+  // Create product card
+  function createProductCard(product) {
+    const card = document.createElement('article');
+    card.className = "bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-xl transition-all duration-300 overflow-hidden";
+    
+    const categoryDisplay = getCategoryDisplay(product.fields.category);
+    const thumbnail = product.fields.thumbnail || '';
+    
+    card.innerHTML = `
+      <div class="aspect-[16/9] relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+        ${thumbnail 
+          ? `<img src="${thumbnail}" alt="${product.fields.name}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">`
+          : `<div class="w-full h-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+               <svg class="w-16 h-16 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+               </svg>
+             </div>`
+        }
+        <div class="absolute top-4 left-4">
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white/95 backdrop-blur-sm text-green-700 shadow-lg">
+            ${categoryDisplay}
+          </span>
+        </div>
+        ${product.fields.is_featured ? `
+          <div class="absolute top-4 right-4">
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-lg">
+              ⭐ Featured
+            </span>
+          </div>
+        ` : ''}
+      </div>
+      
+      <div class="p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+          ${product.fields.name}
+        </h3>
+        
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-2xl font-bold text-green-600">Rp ${product.fields.price.toLocaleString()}</span>
+        </div>
+        
+        <p class="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-5">
+          ${product.fields.description}
+        </p>
+        
+        <div class="flex gap-3 pt-5 border-t border-gray-100">
+          <button 
+            onclick="editProductById('${product.pk}')" 
+            class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            Edit
+          </button>
+          <button 
+            onclick="deleteProductRequest('${product.pk}')" 
+            class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+    
+    return card;
+  }
+
+  function getCategoryDisplay(category) {
+    const categories = {
+      'jerseys': 'Football Jerseys',
+      'equipment': 'Equipment',
+      'balls': 'Footballs',
+      'goalkeeper': 'Goalkeeper',
+      'casual': 'Casual Wear'
+    };
+    return categories[category] || category;
+  }
+
+  // Edit product
+  async function editProductById(id) {
+    try {
+      const url = "{% url 'main:show_json_by_id' '0' %}".replace('0', id);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error();
+      
+      const data = await res.json();
+      const product = Array.isArray(data) && data.length > 0 ? data[0] : null;
+      
+      if (product) {
+        openProductModal(true, product);
+      }
+    } catch (err) {
+      showToast('Failed to load product data', 'error');
+      console.error(err);
+    }
+  }
+
+  // Delete product
+  function deleteProductRequest(id) {
+    openDeleteModal(id);
+  }
+
+  async function confirmDeleteProduct() {
+    if (!productToDelete) return;
+    
+    const url = "{% url 'main:delete_product' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', productToDelete);
+    
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast(data.message || 'Product deleted successfully!', 'success');
+        closeDeleteModal();
+        await loadProducts();
+      } else {
+        throw new Error();
+      }
+    } catch (err) {
+      showToast('Failed to delete product', 'error');
+      console.error(err);
+    }
+  }
+
+  // Save product (create or update)
+  productForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const id = productIdInput.value;
+    const url = id 
+      ? "{% url 'main:edit_product' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', id)
+      : "{% url 'main:create_product' %}";
+    
+    const formData = new FormData();
+    formData.append('name', nameInput.value);
+    formData.append('price', priceInput.value);
+    formData.append('description', descInput.value);
+    formData.append('thumbnail', thumbnailInput.value);
+    formData.append('category', categoryInput.value);
+    formData.append('is_featured', isFeaturedInput.checked ? 'on' : '');
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+        body: formData,
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        closeProductModal();
+        showToast(data.message || (id ? 'Product updated!' : 'Product created!'), 'success');
+        await loadProducts();
+      } else {
+        throw new Error(data.message || 'Failed to save product');
+      }
+    } catch (err) {
+      showToast('Failed to save product', 'error');
+      console.error(err);
+    }
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try {
+      const res = await fetch("{% url 'main:logout' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast('Logout successful!', 'success');
+        setTimeout(() => window.location.href = "{% url 'main:login' %}", 1000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  // Event listeners
+  document.getElementById('createBtn').addEventListener('click', () => openProductModal());
+  document.getElementById('cancelModal').addEventListener('click', closeProductModal);
+  document.getElementById('refreshBtn').addEventListener('click', loadProducts);
+  document.getElementById('cancelDelete').addEventListener('click', closeDeleteModal);
+  document.getElementById('confirmDelete').addEventListener('click', confirmDeleteProduct);
+
+  // Load products on page load
+  window.addEventListener('load', loadProducts);
+</script>
+{% endblock %}

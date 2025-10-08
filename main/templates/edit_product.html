@@ -11,42 +11,112 @@
     
     <!-- Back Navigation -->
     <div class="mb-6">
-      <a href="{% url 'main:show_main' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-        ← Back to Product
+      <a href="{% url 'main:show_main' %}" class="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors group">
+        <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Back to Products
       </a>
     </div>
     
     <!-- Form -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6 sm:p-8 form-style">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900 mb-2">Edit Product</h1>
-        <p class="text-gray-600">Update your football product</p>
+        <p class="text-gray-600">Update your football product information</p>
       </div>
+
+      <!-- Error Container -->
+      <div id="errorContainer" class="mb-4"></div>
       
-      <form method="POST" class="space-y-6">
+      <form id="editProductForm" class="space-y-6">
         {% csrf_token %}
-        {% for field in form %}
-          <div>
-            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-              {{ field.label }}
-            </label>
-            <div class="w-full">
-              {{ field }}
-            </div>
-            {% if field.help_text %}
-              <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
-            {% endif %}
-            {% for error in field.errors %}
-              <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-            {% endfor %}
-          </div>
-        {% endfor %}
+        
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+            Product Name *
+          </label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            value="{{ product.name }}"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            required>
+        </div>
+        
+        <div>
+          <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+            Price *
+          </label>
+          <input 
+            type="number" 
+            id="price" 
+            name="price" 
+            value="{{ product.price }}"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            required>
+        </div>
+        
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+            Description *
+          </label>
+          <textarea 
+            id="description" 
+            name="description" 
+            rows="6"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+            required>{{ product.description }}</textarea>
+        </div>
+
+        <div>
+          <label for="thumbnail" class="block text-sm font-medium text-gray-700 mb-2">
+            Thumbnail URL
+          </label>
+          <input 
+            type="url" 
+            id="thumbnail" 
+            name="thumbnail" 
+            value="{{ product.thumbnail|default:'' }}"
+            placeholder="https://example.com/image.jpg"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        </div>
+
+        <div>
+          <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+            Category
+          </label>
+          <select 
+            id="category" 
+            name="category" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <option value="jerseys" {% if product.category == 'jerseys' %}selected{% endif %}>Football Jerseys</option>
+            <option value="equipment" {% if product.category == 'equipment' %}selected{% endif %}>Football Equipment and Accessories</option>
+            <option value="balls" {% if product.category == 'balls' %}selected{% endif %}>Footballs</option>
+            <option value="goalkeeper" {% if product.category == 'goalkeeper' %}selected{% endif %}>Goalkeeper Gear</option>
+            <option value="casual" {% if product.category == 'casual' %}selected{% endif %}>Casual Wear and Merchandise</option>
+          </select>
+        </div>
+
+        <div class="flex items-center">
+          <input 
+            type="checkbox" 
+            id="is_featured" 
+            name="is_featured" 
+            {% if product.is_featured %}checked{% endif %}
+            class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+          <label for="is_featured" class="ml-2 text-sm font-medium text-gray-700">Featured Product</label>
+        </div>
         
         <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-          <a href="{% url 'main:show_main' %}" class="order-2 sm:order-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors text-center">
+          <a href="{% url 'main:show_main' %}" class="order-2 sm:order-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center">
             Cancel
           </a>
-          <button type="submit" class="order-1 sm:order-2 flex-1 bg-green-600 text-white px-6 py-3 rounded-md font-medium hover:bg-green-700 transition-colors">
+          <button 
+            type="submit" 
+            id="submitBtn"
+            class="order-1 sm:order-2 flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
             Update Product
           </button>
         </div>
@@ -54,4 +124,115 @@
     </div>
   </div>
 </div>
+
+<!-- Toast Notification -->
+<div id="toast" class="hidden fixed top-4 right-4 z-50 max-w-sm">
+  <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 flex items-start gap-3">
+    <div id="toastIcon" class="flex-shrink-0"></div>
+    <div class="flex-1">
+      <p id="toastTitle" class="font-semibold text-gray-900"></p>
+      <p id="toastMessage" class="text-sm text-gray-600"></p>
+    </div>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  const editForm = document.getElementById("editProductForm");
+  const submitBtn = document.getElementById("submitBtn");
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const toast = document.getElementById("toast");
+  const toastIcon = document.getElementById("toastIcon");
+  const toastTitle = document.getElementById("toastTitle");
+  const toastMessage = document.getElementById("toastMessage");
+  const errorContainer = document.getElementById("errorContainer");
+
+  function showToast(title, message, type = 'success') {
+    const iconHTML = type === 'success' 
+      ? '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+      : '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    
+    toastIcon.innerHTML = iconHTML;
+    toastTitle.textContent = title;
+    toastMessage.textContent = message;
+    toast.querySelector('.bg-white').style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+    toast.classList.remove("hidden");
+    
+    setTimeout(() => hideToast(), 3500);
+  }
+
+  function hideToast() {
+    toast.classList.add("hidden");
+  }
+
+  function showError(errors) {
+    let errorHTML = '<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-4">';
+    errorHTML += '<div class="flex items-start">';
+    errorHTML += '<svg class="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    errorHTML += '<div class="flex-1">';
+    errorHTML += '<p class="text-sm font-semibold text-red-800 mb-1">Update Failed</p>';
+    errorHTML += '<ul class="text-sm text-red-700 space-y-1">';
+    
+    for (const [field, messages] of Object.entries(errors)) {
+      messages.forEach(msg => {
+        errorHTML += `<li>• ${msg}</li>`;
+      });
+    }
+    
+    errorHTML += '</ul></div></div></div>';
+    errorContainer.innerHTML = errorHTML;
+  }
+
+  function clearErrors() {
+    errorContainer.innerHTML = '';
+  }
+
+  editForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearErrors();
+    
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Updating...";
+    
+    const formData = new FormData();
+    formData.append('name', document.getElementById('name').value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('description', document.getElementById('description').value);
+    formData.append('thumbnail', document.getElementById('thumbnail').value);
+    formData.append('category', document.getElementById('category').value);
+    formData.append('is_featured', document.getElementById('is_featured').checked ? 'on' : '');
+
+    try {
+      const res = await fetch("{% url 'main:edit_product' product.id %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        showToast("Success!", "Product updated successfully! Redirecting...", "success");
+        setTimeout(() => window.location.href = "{% url 'main:show_main' %}", 1500);
+      } else {
+        if (data.errors) {
+          showError(data.errors);
+        }
+        showToast("Update Failed", "Please check the errors and try again", "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Update Product";
+      }
+    } catch (error) {
+      showToast("Error", "An error occurred. Please try again.", "error");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Update Product";
+      console.error(error);
+    }
+  });
+</script>
 {% endblock %}

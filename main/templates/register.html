@@ -1,118 +1,238 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block meta %}
 <title>Register - Football Product</title>
 {% endblock meta %}
 
 {% block content %}
-<div class="form-style">
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-    <div class="max-w-md w-full relative z-10">
-      <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
-      <div class="text-center mb-8">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-2">Join Us</h2>
-        <p class="text-gray-500">Create your Football Product account</p>
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+  <div class="max-w-md w-full">
+    <!-- Logo/Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4">
+        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+        </svg>
       </div>
+      <h1 class="text-3xl font-bold text-gray-900">⚽ Football Product</h1>
+      <p class="text-gray-600 mt-2">Create your account</p>
+    </div>
 
-      <!-- Form Errors Display -->
-      {% if form.non_field_errors %}
-        <div class="mb-6">
-          {% for error in form.non_field_errors %}
-            <div class="px-4 py-3 rounded text-sm border bg-red-50 border-red-200 text-red-700">
-              {{ error }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-
-      {% if form.errors %}
-        <div class="mb-6">
-          {% for field, errors in form.errors.items %}
-            {% if field != '__all__' %}
-              {% for error in errors %}
-                <div class="px-4 py-3 rounded text-sm border bg-red-50 border-red-200 text-red-700 mb-2">
-                  <strong>{{ field|title }}:</strong> {{ error }}
-                </div>
-              {% endfor %}
-            {% endif %}
-          {% endfor %}
-        </div>
-      {% endif %}
-
-      <form method="POST" action="" class="space-y-5">
+    <!-- Register Form Card -->
+    <div class="bg-white shadow-xl rounded-2xl p-8">
+      <!-- Error Container -->
+      <div id="errorContainer" class="mb-4"></div>
+      
+      <form id="registerForm" class="space-y-5">
         {% csrf_token %}
         
         <div>
-          <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-          <input 
-            id="username" 
-            name="username" 
-            type="text" 
-            required 
-            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-green-500 transition duration-200" 
-            placeholder="Choose a username">
+          <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+            Username
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="username" 
+              name="username" 
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              placeholder="Choose a username"
+              required>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
         </div>
-
+        
         <div>
-          <label for="password1" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-          <input 
-            id="password1" 
-            name="password1" 
-            type="password" 
-            required 
-            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-green-500 transition duration-200" 
-            placeholder="Create a password">
+          <label for="password1" class="block text-sm font-medium text-gray-700 mb-2">
+            Password
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+            </div>
+            <input 
+              type="password" 
+              id="password1" 
+              name="password1" 
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              placeholder="Create a strong password"
+              required>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
         </div>
-
+        
         <div>
-          <label for="password2" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-          <input 
-            id="password2" 
-            name="password2" 
-            type="password" 
-            required 
-            class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:border-green-500 transition duration-200" 
-            placeholder="Confirm your password">
+          <label for="password2" class="block text-sm font-medium text-gray-700 mb-2">
+            Confirm Password
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </div>
+            <input 
+              type="password" 
+              id="password2" 
+              name="password2" 
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              placeholder="Confirm your password"
+              required>
+          </div>
         </div>
-
+        
         <button 
           type="submit" 
-          class="w-full bg-green-600 text-white font-medium py-3 px-4 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
+          id="submitBtn"
+          class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02]">
           Create Account
         </button>
       </form>
-
-      <!-- Messages Display -->
-      {% if messages %}
-        <div class="mt-6">
-          {% for message in messages %}
-            <div 
-              class="
-                px-4 py-3 rounded text-sm border
-                {% if message.tags == 'success' %}
-                  bg-green-50 border-green-200 text-green-700
-                {% elif message.tags == 'error' %}
-                  bg-red-50 border-red-200 text-red-700
-                {% else %}
-                  bg-gray-50 border-gray-200 text-gray-700
-                {% endif %}
-              ">
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-
+      
       <div class="mt-6 text-center">
-        <p class="text-gray-500 text-sm">
+        <p class="text-gray-600 text-sm">
           Already have an account? 
-          <a href="{% url 'main:login' %}" class="text-green-600 hover:text-green-700 font-medium">
+          <a href="{% url 'main:login' %}" class="text-green-600 hover:text-green-700 font-semibold hover:underline">
             Sign In
           </a>
         </p>
       </div>
-      </div>
     </div>
+
+    <!-- Footer -->
+    <p class="text-center text-gray-500 text-sm mt-6">
+      © 2024 Football Product. All rights reserved.
+    </p>
   </div>
 </div>
-{% endblock content %}
+
+<!-- Toast Notification -->
+<div id="toast" class="hidden fixed top-4 right-4 z-50 max-w-sm animate-slide-in">
+  <div class="bg-white rounded-lg shadow-2xl border-l-4 p-4 flex items-start gap-3">
+    <div id="toastIcon" class="flex-shrink-0"></div>
+    <div class="flex-1">
+      <p id="toastTitle" class="font-semibold text-gray-900"></p>
+      <p id="toastMessage" class="text-sm text-gray-600 mt-0.5"></p>
+    </div>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+</style>
+
+<script>
+  const registerForm = document.getElementById("registerForm");
+  const submitBtn = document.getElementById("submitBtn");
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const toast = document.getElementById("toast");
+  const toastIcon = document.getElementById("toastIcon");
+  const toastTitle = document.getElementById("toastTitle");
+  const toastMessage = document.getElementById("toastMessage");
+  const errorContainer = document.getElementById("errorContainer");
+
+  function showToast(title, message, type = 'success') {
+    const iconHTML = type === 'success' 
+      ? '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+      : '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    
+    toastIcon.innerHTML = iconHTML;
+    toastTitle.textContent = title;
+    toastMessage.textContent = message;
+    toast.querySelector('.bg-white').style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+    toast.classList.remove("hidden");
+    
+    setTimeout(() => hideToast(), 3500);
+  }
+
+  function hideToast() {
+    toast.classList.add("hidden");
+  }
+
+  function showError(errors) {
+    let errorHTML = '<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-4">';
+    errorHTML += '<div class="flex items-start">';
+    errorHTML += '<svg class="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    errorHTML += '<div class="flex-1">';
+    errorHTML += '<p class="text-sm font-semibold text-red-800 mb-1">Registration Failed</p>';
+    errorHTML += '<ul class="text-sm text-red-700 space-y-1">';
+    
+    for (const [field, messages] of Object.entries(errors)) {
+      messages.forEach(msg => {
+        errorHTML += `<li>• ${msg}</li>`;
+      });
+    }
+    
+    errorHTML += '</ul></div></div></div>';
+    errorContainer.innerHTML = errorHTML;
+  }
+
+  function clearErrors() {
+    errorContainer.innerHTML = '';
+  }
+
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearErrors();
+    
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Creating Account...";
+    
+    const formData = new FormData(registerForm);
+
+    try {
+      const res = await fetch("{% url 'main:register' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        showToast("Success!", "Account created! Redirecting to login...", "success");
+        setTimeout(() => window.location.href = "{% url 'main:login' %}", 1500);
+      } else {
+        if (data.errors) {
+          showError(data.errors);
+        }
+        showToast("Registration Failed", "Please check the errors and try again", "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Create Account";
+      }
+    } catch (error) {
+      showToast("Error", "An error occurred. Please try again.", "error");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Create Account";
+      console.error(error);
+    }
+  });
+</script>
+{% endblock %}
