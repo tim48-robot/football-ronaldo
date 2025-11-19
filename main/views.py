@@ -14,6 +14,7 @@ from main.models import Product
 from django.core import serializers
 from main.forms import ProductForm
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.html import strip_tags
 
 
 
@@ -262,29 +263,30 @@ def create_product_flutter(request):
     if not request.user.is_authenticated:
         return JsonResponse({
             "status": "error",
-            "message": "User must be authenticated to create news"
+            "message": "User must be authenticated to create product"
         }, status=401)
-    
+
     if request.method == 'POST':
         data = json.loads(request.body)
-        title = strip_tags(data.get("title", ""))  
-        content = strip_tags(data.get("content", ""))
+        name = strip_tags(data.get("name", ""))
+        price = data.get("price", 0.0)
+        description = strip_tags(data.get("description", ""))
         category = data.get("category", "")
         thumbnail = data.get("thumbnail", "")
         is_featured = data.get("is_featured", False)
         user = request.user
-        
+
         new_product = Product(
-            name=name, 
+            name=name,
             price=price,
             description=description,
             category=category,
             thumbnail=thumbnail,
-            isFeatured=isFeatured,
+            is_featured=is_featured,
             user=user
         )
         new_product.save()
-        
+
         return JsonResponse({"status": "success"}, status=200)
     else:
         return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
