@@ -1,4 +1,5 @@
 import datetime
+import requests
 import json
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.urls import reverse
@@ -12,6 +13,9 @@ from django.contrib.auth.models import User
 from main.models import Product
 from django.core import serializers
 from main.forms import ProductForm
+from django.views.decorators.csrf import csrf_exempt
+
+
 
 
 @require_http_methods(["GET", "POST"])
@@ -212,3 +216,75 @@ def show_json_by_id(request, product_id):
     product_item = Product.objects.filter(pk=product_id)
     json_data = serializers.serialize("json", product_item)
     return HttpResponse(json_data, content_type="application/json")
+
+
+def proxy_image(request):
+    import base64
+    from urllib.parse import urlparse, parse_qs
+    
+    image_url = request.GET.get('url')
+    if not image_url:
+        return HttpResponse('No URL provided', status=400)
+    
+    try:
+        # Handle base64 data URLs
+        if image_url.startswith('data:'):
+            # Parse data URL: data:image/jpeg;base64,<base64_string>
+            parts = image_url.split(',', 1)
+            if len(parts) == 2:
+                header, data = parts
+                # Extract mime type from header
+                mime_type = 'image/jpeg'  # default
+                if 'image/' in header:
+                    mime_type = header.split(';')[0].replace('data:', '')
+                
+                # Decode base64
+                image_data = base64.b64decode(data)
+                return HttpResponse(image_data, content_type=mime_type)
+            else:
+                return HttpResponse('Invalid data URL format', status=400)
+        
+        # Fetch image from external source
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+        
+        # Return the image with proper content type
+        return HttpResponse(
+            response.content,
+            content_type=response.headers.get('Content-Type', 'image/jpeg')
+        )
+    except requests.RequestException as e:
+        return HttpResponse(f'Error fetching image: {str(e)}', status=500)
+
+@csrf_exempt
+def create_product_flutter(request):
+    # Check if user is authenticated
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "status": "error",
+            "message": "User must be authenticated to create news"
+        }, status=401)
+    
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        title = strip_tags(data.get("title", ""))  
+        content = strip_tags(data.get("content", ""))
+        category = data.get("category", "")
+        thumbnail = data.get("thumbnail", "")
+        is_featured = data.get("is_featured", False)
+        user = request.user
+        
+        new_product = Product(
+            name=name, 
+            price=price,
+            description=description,
+            category=category,
+            thumbnail=thumbnail,
+            isFeatured=isFeatured,
+            user=user
+        )
+        new_product.save()
+        
+        return JsonResponse({"status": "success"}, status=200)
+    else:
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
