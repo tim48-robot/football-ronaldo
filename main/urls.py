@@ -17,5 +17,5 @@ urlpatterns = [
     path("xml/", show_xml, name="show_xml"),
     path("xml/<str:product_id>/", show_xml_by_id, name="show_xml_by_id"),
     path('proxy-image/', proxy_image, name='proxy_image'),
-    path('create-flutter/', create_news_flutter, name='create_news_flutter'),
+    path('create-flutter/', create_product_flutter, name='create_product_flutter'),
 ]

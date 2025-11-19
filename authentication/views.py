@@ -8,30 +8,54 @@ import json
 
 @csrf_exempt
 def login(request):
-    username = request.POST['username']
-    password = request.POST['password']
-    user = authenticate(username=username, password=password)
-    if user is not None:
-        if user.is_active:
-            auth_login(request, user)
-            # Login status successful.
-            return JsonResponse({
-                "username": user.username,
-                "status": True,
-                "message": "Login successful!"
-                # Add other data if you want to send data to Flutter.
-            }, status=200)
+    print("\n" + "="*50)
+    print("LOGIN REQUEST RECEIVED")
+    print("="*50)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            print(f"✅ JSON Parsed - Username: '{username}'")
+        except json.JSONDecodeError:
+            # Handle form data properly
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            print(f"Using POST data - Username: '{username}', Password: {'*' * len(password) if password else 'None'}")
+        
+        print(f"Attempting to authenticate user: '{username}'")
+        print(f"Password received: {'Yes' if password else 'No'}")
+        
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            print(f"✅ User authenticated: {user.username}")
+            if user.is_active:
+                auth_login(request, user)
+                print(f"✅ User logged in successfully")
+                return JsonResponse({
+                    "username": user.username,
+                    "status": "success",
+                    "message": "Login successful!"
+                }, status=200)
+            else:
+                print(f"❌ User is not active")
+                return JsonResponse({
+                    "status": "failed",
+                    "message": "Login failed, account is disabled."
+                }, status=401)
         else:
+            print(f"❌ Authentication failed for username: '{username}'")
             return JsonResponse({
-                "status": False,
-                "message": "Login failed, account is disabled."
+                "status": "failed",
+                "message": "Login failed, please check your username or password."
             }, status=401)
-
-    else:
-        return JsonResponse({
-            "status": False,
-            "message": "Login failed, please check your username or password."
-        }, status=401)
+    
+    return JsonResponse({
+        "status": "failed",
+        "message": "Invalid request method."
+    }, status=400)
 
 
 @csrf_exempt
